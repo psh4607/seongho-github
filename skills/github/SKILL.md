@@ -1,0 +1,72 @@
+---
+name: github
+description: 로컬 git, gh, GitHub GraphQL을 사용해 GitHub 저장소, pull request, issue 작업의 방향을 잡습니다. 일반 GitHub 도움, PR/issue 요약, 또는 더 구체적인 워크플로우를 고르기 전 저장소 맥락이 필요할 때 사용합니다.
+---
+
+# GitHub
+
+## 개요
+
+이 스킬은 GitHub 작업의 일반 진입점입니다. 로컬 저장소나 사용자가 지정한 GitHub 대상을 먼저 확인하고, `git`과 `gh`로 필요한 맥락을 수집한 뒤, 의도가 명확해지면 전문 스킬로 바로 넘깁니다.
+
+이 플러그인은 `gh` 우선 원칙을 따릅니다.
+
+- checkout, 브랜치, diff, status, commit, push 맥락은 로컬 `git`을 사용합니다.
+- 인증, 저장소 메타데이터, pull request, issue, comment, label, PR 생성은 `gh`를 사용합니다.
+- REST나 일반 `gh` 출력이 리뷰 스레드 상태, 페이지네이션, inline anchor를 충분히 보존하지 못하면 `gh api graphql`을 사용합니다.
+- 모든 GitHub 작업은 사용자가 자기 shell에서 재현할 수 있는 명령 중심으로 진행합니다.
+
+의도가 명확해지면 일반 triage 범위를 오래 끌지 말고 바로 전문 스킬로 라우팅합니다.
+
+## 책임 범위
+
+요청이 더 좁은 전문 워크플로우를 필요로 하지 않을 때 이 스킬에서 직접 처리합니다.
+
+- repo, PR, issue, 또는 로컬 checkout이 식별된 뒤 저장소 방향 잡기
+- 최근 PR 또는 issue triage
+- PR 메타데이터 요약
+- PR patch 확인
+- top-level PR comment, label, reaction 확인
+- issue 조회와 요약
+- 요청 범위가 충분히 좁고 publish workflow가 필요 없을 때의 PR 생성
+
+사용자 요청이나 로컬 git 맥락만으로 저장소를 식별할 수 없다면 추측하지 말고 repo 식별자를 요청합니다.
+
+## 라우팅 규칙
+
+1. 먼저 작업 맥락을 확인합니다.
+   - 사용자가 repository, PR 번호, issue 번호, URL을 제공했다면 그것을 사용합니다.
+   - "이 브랜치", "현재 PR"에 대한 요청이면 `git remote -v`, `git branch --show-current`, `gh pr view --json number,url,headRefName,baseRefName`으로 로컬 git 맥락을 확인합니다.
+   - 로컬 확인 후에도 repository가 모호하면 repo 식별자를 요청합니다.
+2. 행동하기 전에 요청을 분류합니다.
+   - `repo or PR triage`: PR, issue, patch, comment, label, reaction, repository state 요약
+   - `review follow-up`: unresolved review thread, requested changes, inline review feedback 처리
+   - `CI debugging`: failing check, Actions log, CI root cause 분석
+   - `publish changes`: branch 생성/전환, stage, commit, push, draft PR 생성
+3. 분류가 끝나면 바로 전문 스킬로 넘깁니다.
+   - 리뷰 코멘트와 requested changes: `../gh-address-comments/SKILL.md`
+   - GitHub Actions 실패 체크: `../gh-fix-ci/SKILL.md`
+   - commit, push, PR 생성: `../yeet/SKILL.md`
+
+## 기본 워크플로우
+
+1. 원격 GitHub 데이터가 필요하면 `gh` 설치와 인증 상태를 확인합니다.
+2. repository와 item scope를 확인합니다.
+3. `gh --json`, `gh api`, `gh api graphql`로 구조화된 맥락을 수집합니다.
+4. triage로 충분한지, 전문 스킬이 필요한지 판단합니다.
+5. 무엇을 확인했고, 무엇이 바뀌었고, 무엇이 남았는지 명확히 요약합니다.
+
+## 출력 기준
+
+- triage 요청은 repository, PR, issue 상태와 다음 행동을 간결하게 요약합니다.
+- 혼합 요청은 어떤 전문 경로로 이동하는지와 이유를 설명합니다.
+- write action은 적용 전에 정확한 PR, issue, label, reaction, branch, commit 대상을 다시 확인합니다.
+- GitHub Actions 로그를 PR 메타데이터만으로 확인할 수 있다고 말하지 않습니다. run과 log는 `gh`로 확인합니다.
+
+## 예시
+
+- "이 repo의 open PR들을 요약하고 무엇을 봐야 하는지 알려줘."
+- "이 PR 좀 도와줘."
+- "PR 482의 최신 코멘트를 보고 actionable한 것만 알려줘."
+- "이 브랜치의 failing check를 디버깅해줘."
+- "이 변경사항을 커밋하고 push한 다음 draft PR을 만들어줘."

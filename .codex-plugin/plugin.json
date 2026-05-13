@@ -1,0 +1,38 @@
+{
+  "name": "seongho-github",
+  "version": "0.1.0",
+  "description": "로컬 git, gh, GitHub GraphQL을 기준으로 동작하는 GitHub 워크플로우입니다.",
+  "author": {
+    "name": "seongho",
+    "url": "https://github.com/seongho"
+  },
+  "homepage": "https://github.com/psh4607/seongho-github",
+  "repository": "https://github.com/psh4607/seongho-github",
+  "license": "Apache-2.0",
+  "keywords": [
+    "github",
+    "gh",
+    "pull-request",
+    "code-review",
+    "actions"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Seongho GitHub",
+    "shortDescription": "gh와 로컬 git 기반 GitHub 워크플로우",
+    "longDescription": "재현 가능한 로컬 git, gh, GraphQL 명령을 기준으로 PR 확인, 리뷰 피드백 처리, GitHub Actions 디버깅, 로컬 변경사항 게시를 수행합니다.",
+    "developerName": "seongho",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/psh4607/seongho-github",
+    "brandColor": "#24292F",
+    "defaultPrompt": [
+      "현재 GitHub PR을 확인해줘.",
+      "해결되지 않은 PR 리뷰 피드백을 처리해줘.",
+      "커밋하고 push한 뒤 draft PR을 만들어줘."
+    ]
+  }
+}
