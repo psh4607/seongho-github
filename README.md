@@ -1,6 +1,6 @@
 # Seongho GitHub
 
-로컬 `git`, GitHub CLI `gh`, GitHub GraphQL을 기준으로 동작하는 개인 GitHub 워크플로우 스킬 모음입니다.
+로컬 `git`, GitHub CLI `gh`, GitHub GraphQL을 기준으로 동작하는 개인 GitHub 워크플로우 스킬 모음입니다. GitHub PR URL 기반 리뷰 처리, Copilot review 대응, CI 디버깅, PR 생성 작업을 명확히 소유하도록 구성했습니다.
 
 ## 정책
 
@@ -12,10 +12,10 @@
 
 ## 스킬
 
-- `github`: GitHub 작업의 일반 진입점과 라우팅.
-- `yeet`: 로컬 변경사항을 브랜치, 커밋, push, draft PR까지 게시.
-- `gh-address-comments`: GraphQL로 PR 리뷰 스레드를 읽고 actionable feedback 처리.
-- `gh-fix-ci`: GitHub Actions 실패 체크와 로그를 확인하고 수정 방향 제시.
+- `github`: GitHub URL, PR URL, issue URL 기반 작업의 일반 진입점과 라우팅.
+- `yeet`: 로컬 변경사항을 branch naming, 커밋, push, draft PR까지 게시.
+- `gh-address-comments`: PR 리뷰, Copilot review, requested changes를 GraphQL로 확인하고 reply/resolve/commit/push까지 처리.
+- `gh-fix-ci`: GitHub Actions, PR checks, workflow log를 확인하고 수정 방향 제시.
 
 ## 설치 메모
 

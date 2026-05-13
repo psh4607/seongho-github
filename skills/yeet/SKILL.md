@@ -1,13 +1,13 @@
 ---
 name: "yeet"
-description: "로컬 변경사항의 scope를 확인하고, 의도적으로 commit한 뒤, branch를 push하고, gh로 draft PR을 생성합니다."
+description: "로컬 변경사항으로 GitHub PR을 생성하거나 커밋, push, draft PR, pull request 생성, branch naming, PR template 작성이 필요할 때 사용합니다. git과 gh로 scope 확인, type/ticket/slug branch 생성, type: 내용 commit, push, gh pr create를 수행합니다."
 ---
 
 # GitHub 변경사항 게시
 
 ## 개요
 
-이 스킬은 사용자가 로컬 checkout의 변경사항을 branch 준비, staging, commit, push, pull request 생성까지 끝내길 명시적으로 원할 때만 사용합니다.
+이 스킬은 사용자가 로컬 checkout의 변경사항을 branch 준비, staging, commit, push, pull request 생성까지 끝내길 명시적으로 원할 때 사용합니다. "PR 만들어줘", "커밋하고 push해줘", "현재 변경사항으로 draft PR 만들어줘" 같은 요청이 여기에 해당합니다.
 
 이 워크플로우는 local-first입니다.
 

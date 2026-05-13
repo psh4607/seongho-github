@@ -1,11 +1,11 @@
 ---
 name: gh-address-comments
-description: GitHub pull request의 actionable review feedback을 처리합니다. unresolved review thread, requested changes, inline review comment를 확인하고, gh와 GitHub GraphQL로 선택된 수정을 구현할 때 사용합니다.
+description: GitHub PR URL, Copilot review, 코파일럿 리뷰, PR 리뷰 확인/처리/반영 요청을 처리합니다. unresolved review thread, requested changes, inline review comment를 gh와 GitHub GraphQL로 확인하고, 필요한 수정, thread reply, resolve, commit, push까지 수행할 때 이 스킬을 우선 사용합니다.
 ---
 
 # GitHub PR 코멘트 처리
 
-사용자가 GitHub pull request의 requested changes를 처리하길 원할 때 이 스킬을 사용합니다. thread-aware review data는 일반 PR comment만으로 충분하지 않으므로 `gh api graphql` 문제로 취급합니다.
+사용자가 GitHub pull request의 review, Copilot review, requested changes, inline comment를 확인하거나 처리하길 원할 때 이 스킬을 사용합니다. thread-aware review data는 일반 PR comment만으로 충분하지 않으므로 `gh api graphql` 문제로 취급합니다.
 
 원격 read 전에 `gh auth status`를 실행합니다. 인증이 실패하면 사용자에게 `gh auth login`을 요청하고 다시 시도합니다.
 

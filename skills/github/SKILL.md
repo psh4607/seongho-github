@@ -1,6 +1,6 @@
 ---
 name: github
-description: 로컬 git, gh, GitHub GraphQL을 사용해 GitHub 저장소, pull request, issue 작업의 방향을 잡습니다. 일반 GitHub 도움, PR/issue 요약, 또는 더 구체적인 워크플로우를 고르기 전 저장소 맥락이 필요할 때 사용합니다.
+description: GitHub URL, GitHub PR URL, issue URL, repository URL이 포함된 일반 GitHub 작업의 진입점입니다. gh와 로컬 git으로 PR/issue/repo를 확인하고, PR 리뷰/코파일럿 리뷰는 gh-address-comments, CI/check 실패는 gh-fix-ci, 커밋/push/PR 생성은 yeet로 라우팅합니다.
 ---
 
 # GitHub
@@ -47,6 +47,13 @@ description: 로컬 git, gh, GitHub GraphQL을 사용해 GitHub 저장소, pull 
    - 리뷰 코멘트와 requested changes: `../gh-address-comments/SKILL.md`
    - GitHub Actions 실패 체크: `../gh-fix-ci/SKILL.md`
    - commit, push, PR 생성: `../yeet/SKILL.md`
+
+## URL 기반 즉시 라우팅
+
+- GitHub PR URL과 `리뷰`, `코파일럿`, `Copilot`, `review`, `comment`, `requested changes`, `thread`, `resolve`, `반영`, `처리`가 함께 나오면 `../gh-address-comments/SKILL.md`를 우선 사용합니다.
+- GitHub PR URL과 `CI`, `check`, `checks`, `failing`, `failed`, `Actions`, `workflow`, `log`, `로그`가 함께 나오면 `../gh-fix-ci/SKILL.md`를 우선 사용합니다.
+- `커밋`, `commit`, `push`, `PR 만들어`, `PR 생성`, `draft PR`, `pull request 만들어`가 나오면 `../yeet/SKILL.md`를 우선 사용합니다.
+- PR/issue/repo를 단순히 읽거나 요약하는 요청이면 이 스킬에서 `gh`로 triage합니다.
 
 ## 기본 워크플로우
 

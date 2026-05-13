@@ -1,13 +1,13 @@
 ---
 name: "gh-fix-ci"
-description: "GitHub Actions에서 실행되는 PR check 실패를 디버깅하거나 수정할 때 사용합니다. 수정 전에 gh로 PR metadata, Actions check, log를 확인합니다."
+description: "GitHub PR URL의 CI 실패, failing checks, failed checks, GitHub Actions, workflow log, PR checks를 디버깅하거나 수정할 때 사용합니다. gh pr checks, gh run view, gh api로 PR metadata, Actions check, log를 확인합니다."
 ---
 
 # GitHub Actions CI 수정
 
 ## 개요
 
-이 스킬은 pull request의 GitHub Actions check 실패를 다룰 때 사용합니다.
+이 스킬은 pull request의 CI 실패, PR checks 실패, GitHub Actions check 실패, workflow log 조사가 필요할 때 사용합니다.
 
 이 워크플로우는 `gh` 우선입니다.
 
