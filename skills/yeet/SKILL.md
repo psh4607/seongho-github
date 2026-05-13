@@ -23,10 +23,21 @@ description: "로컬 변경사항의 scope를 확인하고, 의도적으로 comm
 
 ## 이름 규칙
 
-- Branch: `main`, `master`, 또는 remote default branch에서 시작한다면 사용자가 다른 이름을 요청하지 않는 한 `agent/{description}`을 사용합니다.
-- Commit: 실제 diff를 기준으로 짧은 imperative 문장 또는 conventional commit 형식을 고릅니다.
+- Branch: 새 branch가 필요하면 `[type]/[ticket]/[내용]` 형식을 사용합니다.
+  - `type`은 필수이며 실제 diff를 기준으로 고릅니다.
+  - 허용 type:
+    - `feat`: 새로운 기능
+    - `fix`: 버그 수정
+    - `docs`: 문서 변경
+    - `refactor`: 리팩토링
+    - `test`: 테스트
+    - `chore`: 빌드, 설정 등
+  - `ticket`은 선택사항입니다. Jira ticket id, Linear ticket id 등을 대화, branch, commit, issue, PR context에서 추론합니다.
+  - ticket이 있으면 `type/TICKET/slug`, ticket이 없으면 `type/slug`를 사용합니다.
+  - `slug`는 실제 diff와 대화 맥락에서 추론한 짧은 kebab-case 설명으로 작성합니다.
+- Commit: `type: 내용` 형식을 기본으로 사용합니다. 내용은 실제 diff를 기준으로 짧은 imperative 문장 또는 conventional commit 스타일로 작성합니다.
 - PR title: 특정 도구 이름을 prefix로 붙이지 않고 전체 diff를 요약합니다.
-- PR body: 실제 Markdown을 temp file에 작성한 뒤 `gh pr create`에 `--body-file`로 전달합니다.
+- PR body: repository에 PR template이 있으면 그 template을 따릅니다. 없으면 `작업 배경`, `티켓 및 링크`, `작업 내용`, `테스트` 섹션을 작성합니다. PR body는 실제 Markdown을 temp file에 작성한 뒤 `gh pr create`에 `--body-file`로 전달합니다.
 
 ## 워크플로우
 
@@ -36,12 +47,16 @@ description: "로컬 변경사항의 scope를 확인하고, 의도적으로 comm
    - working tree에 관계없는 변경사항이 섞여 있으면 `git add -A`를 기본값으로 사용하지 않습니다. 어떤 파일을 PR에 포함할지 사용자에게 확인합니다.
 2. branch 전략을 정합니다.
    - `gh repo view --json defaultBranchRef` 또는 `git remote show origin`으로 default branch를 찾습니다.
-   - 현재 branch가 `main`, `master`, 또는 default branch라면 `agent/{description}`을 생성합니다.
+   - 현재 branch가 `main`, `master`, 또는 default branch라면 이름 규칙에 맞는 새 branch를 생성합니다.
    - 그 외에는 사용자가 rename이나 split을 요청하지 않는 한 현재 branch에 머뭅니다.
+   - 새 branch 이름을 만들 때는 먼저 type을 확정하고, session context에서 ticket id와 내용 slug를 추론합니다.
+   - type이 모호하면 diff의 주된 의도를 기준으로 고릅니다. 기능 추가는 `feat`, 버그 수정은 `fix`, 문서만 바뀌면 `docs`, 동작 변화 없는 구조 개선은 `refactor`, 테스트만 추가/수정하면 `test`, 빌드/설정/잡무성 변경은 `chore`를 사용합니다.
 3. 의도한 변경사항만 stage합니다.
    - working tree가 섞여 있으면 명시적인 file path를 선호합니다.
    - 전체 working tree가 scope에 포함된다고 사용자가 확인한 경우에만 `git add -A`를 사용합니다.
-4. 확인된 commit message로 commit합니다.
+4. 이름 규칙에 맞는 commit message로 commit합니다.
+   - 기본 형식은 `type: 내용`입니다.
+   - 내용은 branch slug보다 사람이 읽기 좋은 짧은 imperative 문장으로 작성합니다.
 5. 아직 실행하지 않았다면 가장 관련 있는 검증을 실행합니다.
    - dependency나 tool이 없어서 실패하면 합리적인 범위에서 설치 후 한 번 다시 실행합니다.
    - 환경 제한 때문에 막히면 blocker를 정확히 보고합니다.
@@ -50,6 +65,8 @@ description: "로컬 변경사항의 scope를 확인하고, 의도적으로 comm
    - 사용자가 base branch를 지정했다면 그것을 사용하고, 아니면 remote default branch를 사용합니다.
    - 명시적인 flag를 선호합니다: `--draft`, `--base`, `--head`, `--title`, `--body-file`.
    - commit history가 그대로 PR 설명으로 적합할 때만 `--fill`을 사용합니다.
+   - PR template을 찾고, 있으면 그 구조를 유지해 실제 내용으로 채웁니다.
+   - template이 없으면 이 스킬의 기본 PR body 섹션을 사용합니다.
 8. branch name, commit, PR target, validation, 사용자가 확인해야 할 남은 항목을 요약합니다.
 
 ## Write Safety
@@ -61,10 +78,34 @@ description: "로컬 변경사항의 scope를 확인하고, 의도적으로 comm
 
 ## PR Body 기준
 
-PR description은 실제 Markdown prose로 작성하고 다음을 포함합니다.
+먼저 repository의 PR template을 찾습니다.
 
-- 무엇이 바뀌었는지
-- 왜 바뀌었는지
-- 사용자 또는 개발자 영향
-- fix PR이라면 root cause
-- 검증에 사용한 check
+- `.github/pull_request_template.md`
+- `.github/PULL_REQUEST_TEMPLATE.md`
+- `.github/PULL_REQUEST_TEMPLATE/*.md`
+- `PULL_REQUEST_TEMPLATE.md`
+
+template이 있으면 section 제목과 checklist를 유지하고, 비어 있는 placeholder를 실제 diff에 맞게 채웁니다. template이 여러 개라면 PR 성격에 가장 가까운 것을 고르고, 고르기 어렵다면 사용자에게 선택을 요청합니다.
+
+template이 없으면 다음 구조를 사용합니다.
+
+```markdown
+## 작업 배경
+
+<왜 이 변경이 필요한지>
+
+## 티켓 및 링크
+
+- [TICKET-ID](https://...)
+
+## 작업 내용
+
+- <주요 변경 1>
+- <주요 변경 2>
+
+## 테스트
+
+- <실행한 검증 명령>
+```
+
+티켓 링크는 가능하면 클릭 가능한 Markdown 링크로 작성합니다. 대화, branch, commit, PR/issue 본문, Jira/Linear URL, 또는 repository 문맥에서 URL을 추론할 수 있으면 `[TICKET-ID](URL)` 형식으로 씁니다. ticket id만 있고 URL을 신뢰성 있게 만들 수 없으면 id만 적고 추측 URL은 만들지 않습니다.
