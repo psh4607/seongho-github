@@ -89,7 +89,7 @@ python "<path-to-skill>/scripts/validate_publish_ready.py" \
 - branch가 `type/TICKET/slug` 또는 `type/slug` 형식인지
 - branch type이 `feat`, `fix`, `docs`, `refactor`, `test`, `chore` 중 하나인지
 - commit message가 `type: 내용` 또는 `type(scope): 내용` 형식인지
-- PR title이 `[codex]` 같은 도구 prefix 없이 diff를 요약하는지
+- PR title이 도구 prefix 없이 diff를 요약하는지
 - repository PR template이 있으면 PR body가 template heading을 유지하는지
 - template이 없으면 `작업 배경`, `티켓 및 링크`, `작업 내용`, `테스트` 섹션이 있는지
 - branch에 ticket segment가 있으면 PR body에 clickable Markdown ticket link가 있는지

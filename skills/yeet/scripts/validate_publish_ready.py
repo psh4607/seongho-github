@@ -177,7 +177,7 @@ def validate_title(title: str | None, errors: list[str]) -> None:
     lowered = normalized.lower()
     if lowered.startswith(TOOL_TITLE_PREFIXES):
         errors.append(
-            "PR title must summarize the diff without a tool prefix such as [codex]."
+            "PR title must summarize the diff without a tool prefix."
         )
 
 
