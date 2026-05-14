@@ -20,6 +20,7 @@ description: "로컬 변경사항으로 GitHub PR을 생성하거나 커밋, pus
 - GitHub CLI `gh`가 필요합니다. `gh --version`으로 확인하고, 없으면 설치를 요청한 뒤 멈춥니다.
 - 인증된 `gh` session이 필요합니다. `gh auth status`를 실행하고, 인증되어 있지 않으면 `gh auth login` 후 다시 확인하도록 요청합니다.
 - 어떤 변경사항이 PR에 포함되어야 하는지 로컬 git repository에서 명확히 확인해야 합니다.
+- PR 생성 직전에 bundled guardrail script를 실행해야 합니다. 실패하면 branch, commit message, PR body를 고친 뒤 다시 실행합니다.
 
 ## 이름 규칙
 
@@ -48,7 +49,8 @@ description: "로컬 변경사항으로 GitHub PR을 생성하거나 커밋, pus
 2. branch 전략을 정합니다.
    - `gh repo view --json defaultBranchRef` 또는 `git remote show origin`으로 default branch를 찾습니다.
    - 현재 branch가 `main`, `master`, 또는 default branch라면 이름 규칙에 맞는 새 branch를 생성합니다.
-   - 그 외에는 사용자가 rename이나 split을 요청하지 않는 한 현재 branch에 머뭅니다.
+   - 그 외에도 현재 branch가 이름 규칙을 어기면 PR 생성 전에 compliant branch를 새로 만들거나 rename합니다.
+   - 이미 non-compliant branch가 remote에 push되어 있으면 사용자에게 확인한 뒤 compliant branch로 새로 push합니다.
    - 새 branch 이름을 만들 때는 먼저 type을 확정하고, session context에서 ticket id와 내용 slug를 추론합니다.
    - type이 모호하면 diff의 주된 의도를 기준으로 고릅니다. 기능 추가는 `feat`, 버그 수정은 `fix`, 문서만 바뀌면 `docs`, 동작 변화 없는 구조 개선은 `refactor`, 테스트만 추가/수정하면 `test`, 빌드/설정/잡무성 변경은 `chore`를 사용합니다.
 3. 의도한 변경사항만 stage합니다.
@@ -64,10 +66,36 @@ description: "로컬 변경사항으로 GitHub PR을 생성하거나 커밋, pus
 7. `gh pr create`로 draft PR을 엽니다.
    - 사용자가 base branch를 지정했다면 그것을 사용하고, 아니면 remote default branch를 사용합니다.
    - 명시적인 flag를 선호합니다: `--draft`, `--base`, `--head`, `--title`, `--body-file`.
-   - commit history가 그대로 PR 설명으로 적합할 때만 `--fill`을 사용합니다.
+   - `--fill`은 기본적으로 사용하지 않습니다. PR template/body guardrail을 우회하기 쉽기 때문입니다.
    - PR template을 찾고, 있으면 그 구조를 유지해 실제 내용으로 채웁니다.
    - template이 없으면 이 스킬의 기본 PR body 섹션을 사용합니다.
-8. branch name, commit, PR target, validation, 사용자가 확인해야 할 남은 항목을 요약합니다.
+   - `gh pr create` 실행 직전에 `scripts/validate_publish_ready.py`를 실행합니다.
+8. branch name, commit, PR target, validation, guardrail 결과, 사용자가 확인해야 할 남은 항목을 요약합니다.
+
+## Publish Guardrail
+
+PR 생성 직전에 다음 script를 실행합니다.
+
+```bash
+python "<path-to-skill>/scripts/validate_publish_ready.py" \
+  --repo "." \
+  --body-file "<pr-body-file>" \
+  --title "<pr-title>" \
+  --commit-message "<commit-message>"
+```
+
+이 script는 다음을 검사합니다.
+
+- branch가 `type/TICKET/slug` 또는 `type/slug` 형식인지
+- branch type이 `feat`, `fix`, `docs`, `refactor`, `test`, `chore` 중 하나인지
+- commit message가 `type: 내용` 또는 `type(scope): 내용` 형식인지
+- PR title이 `[codex]` 같은 도구 prefix 없이 diff를 요약하는지
+- repository PR template이 있으면 PR body가 template heading을 유지하는지
+- template이 없으면 `작업 배경`, `티켓 및 링크`, `작업 내용`, `테스트` 섹션이 있는지
+- branch에 ticket segment가 있으면 PR body에 clickable Markdown ticket link가 있는지
+- PR body에 placeholder가 남아 있지 않은지
+
+ticket URL을 신뢰성 있게 만들 수 없을 때만 `--allow-unlinked-ticket`을 사용합니다. 이 경우 최종 요약에 ticket link를 만들지 못한 이유를 적습니다.
 
 ## Write Safety
 
@@ -75,6 +103,7 @@ description: "로컬 변경사항으로 GitHub PR을 생성하거나 커밋, pus
 - working tree가 섞여 있으면 scope 확인 없이 push하지 않습니다.
 - 사용자가 ready-for-review PR을 명시적으로 요청하지 않는 한 draft PR을 기본값으로 합니다.
 - repository가 접근 가능한 GitHub remote와 연결되어 있지 않다면 추측하지 말고 blocker를 설명한 뒤 멈춥니다.
+- publish guardrail이 실패하면 PR을 생성하지 않습니다.
 
 ## PR Body 기준
 
