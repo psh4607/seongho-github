@@ -21,4 +21,4 @@
 
 이 저장소는 독립적으로 동작하도록 구성했습니다. `.app.json` 통합 manifest를 포함하지 않습니다.
 
-이 저장소는 plugin marketplace root로도 동작합니다. GitHub repo를 marketplace source로 추가하면 이 플러그인을 사용할 수 있습니다.
+이 저장소는 plugin marketplace root로도 동작합니다. 실제 plugin root는 `plugins/seongho-github`이며, GitHub repo를 marketplace source로 추가하면 이 플러그인을 사용할 수 있습니다.

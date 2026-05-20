@@ -8,7 +8,7 @@
       "name": "seongho-github",
       "source": {
         "source": "local",
-        "path": "./"
+        "path": "./plugins/seongho-github"
       },
       "policy": {
         "installation": "AVAILABLE",
