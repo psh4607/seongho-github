@@ -14,7 +14,7 @@
 
 - `github`: GitHub URL, PR URL, issue URL 기반 작업의 일반 진입점과 라우팅.
 - `yeet`: 로컬 변경사항을 branch naming, 커밋, push, draft PR까지 게시.
-- `gh-address-comments`: PR 리뷰, Copilot review, requested changes를 GraphQL로 확인하고 reply/resolve/commit/push까지 처리.
+- `gh-address-comments`: PR 리뷰, Copilot review, requested changes를 GraphQL로 확인하고 decision file guardrail로 반영/반려, reply/comment, resolve, commit/push까지 처리.
 - `gh-fix-ci`: GitHub Actions, PR checks, workflow log를 확인하고 수정 방향 제시.
 
 ## 설치 메모

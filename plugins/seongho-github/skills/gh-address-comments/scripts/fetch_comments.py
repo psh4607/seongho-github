@@ -46,6 +46,7 @@ query(
         pageInfo { hasNextPage endCursor }
         nodes {
           id
+          url
           body
           createdAt
           updatedAt
@@ -58,6 +59,7 @@ query(
         pageInfo { hasNextPage endCursor }
         nodes {
           id
+          url
           state
           body
           submittedAt
@@ -83,6 +85,7 @@ query(
           comments(first: 100) {
             nodes {
               id
+              url
               body
               createdAt
               updatedAt
