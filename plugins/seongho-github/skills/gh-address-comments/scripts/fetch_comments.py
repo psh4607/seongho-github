@@ -103,7 +103,10 @@ query(
 def _run(cmd: list[str], stdin: str | None = None) -> str:
     p = subprocess.run(cmd, input=stdin, capture_output=True, text=True)
     if p.returncode != 0:
-        raise RuntimeError(f"Command failed: {' '.join(cmd)}\n{p.stderr}")
+        message = f"Command failed: {' '.join(cmd)}\n{p.stderr}"
+        if is_github_rest_rate_limited(message):
+            message = f"{message}\n{gh_rate_limit_guidance()}"
+        raise RuntimeError(message)
     return p.stdout
 
 
@@ -115,10 +118,30 @@ def _run_json(cmd: list[str], stdin: str | None = None) -> dict[str, Any]:
         raise RuntimeError(f"Failed to parse JSON from command output: {e}\nRaw:\n{out}") from e
 
 
+def is_github_rest_rate_limited(message: str) -> bool:
+    text = message.lower()
+    return (
+        "api rate limit exceeded" in text
+        or "x-ratelimit-remaining: 0" in text
+        or "x-ratelimit-remaining:0" in text
+    )
+
+
+def gh_rate_limit_guidance() -> str:
+    return (
+        "GitHub REST rate limit detected. Do not repeat `gh auth refresh`; "
+        "use the Codex GitHub connector for supported PR/comment/thread operations "
+        "or retry `gh` after the reset time."
+    )
+
+
 def _ensure_gh_authenticated() -> None:
     try:
         _run(["gh", "auth", "status"])
-    except RuntimeError:
+    except RuntimeError as exc:
+        if is_github_rest_rate_limited(str(exc)):
+            print(f"Warning: {gh_rate_limit_guidance()}", file=sys.stderr)
+            return
         print("run `gh auth login` to authenticate the GitHub CLI", file=sys.stderr)
         raise RuntimeError("gh auth status failed; run `gh auth login` to authenticate the GitHub CLI") from None
 

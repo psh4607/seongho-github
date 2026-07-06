@@ -14,11 +14,13 @@ description: "로컬 변경사항으로 GitHub PR을 생성하거나 커밋, pus
 - branch 생성, staging, commit, push는 로컬 `git`을 사용합니다.
 - 현재 브랜치 PR 탐색, 인증 확인, remote metadata, PR 생성은 `gh`를 사용합니다.
 - 일반 `gh` 명령으로 필요한 field를 깔끔하게 얻기 어렵다면 `gh api` 또는 `gh api graphql`을 사용합니다.
+- `gh`가 `API rate limit exceeded`, `X-RateLimit-Remaining: 0`, REST `/user` 403으로 막히면 `gh auth refresh`를 반복하지 않고 Codex GitHub connector로 가능한 remote metadata만 확인합니다.
 
 ## 전제 조건
 
 - GitHub CLI `gh`가 필요합니다. `gh --version`으로 확인하고, 없으면 설치를 요청한 뒤 멈춥니다.
 - 인증된 `gh` session이 필요합니다. `gh auth status`를 실행하고, 인증되어 있지 않으면 `gh auth login` 후 다시 확인하도록 요청합니다.
+- 단, `gh auth status` 실패가 REST rate limit 때문이면 로그인 만료로 취급하지 않습니다. connector로 확인 가능한 범위는 진행하고, PR 생성은 connector에 명시 도구가 없으면 `gh` reset 이후로 미룹니다.
 - 어떤 변경사항이 PR에 포함되어야 하는지 로컬 git repository에서 명확히 확인해야 합니다.
 - PR 생성 직전에 bundled guardrail script를 실행해야 합니다. 실패하면 branch, commit message, PR body를 고친 뒤 다시 실행합니다.
 
@@ -70,6 +72,7 @@ description: "로컬 변경사항으로 GitHub PR을 생성하거나 커밋, pus
    - PR template을 찾고, 있으면 그 구조를 유지해 실제 내용으로 채웁니다.
    - template이 없으면 이 스킬의 기본 PR body 섹션을 사용합니다.
    - `gh pr create` 실행 직전에 `scripts/validate_publish_ready.py`를 실행합니다.
+   - REST rate limit으로 `gh pr create`가 불가능하고 connector에 PR 생성 도구가 없다면, commit/push까지만 완료하고 PR title/body/base/head와 reset time을 보고합니다.
 8. branch name, commit, PR target, validation, guardrail 결과, 사용자가 확인해야 할 남은 항목을 요약합니다.
 
 ## Publish Guardrail

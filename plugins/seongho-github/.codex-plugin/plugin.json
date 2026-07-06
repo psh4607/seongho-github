@@ -1,7 +1,7 @@
 {
   "name": "seongho-github",
   "version": "0.1.0",
-  "description": "GitHub PR URL, 리뷰 처리, CI 디버깅, PR 생성 작업을 로컬 git, gh, GitHub GraphQL 기준으로 수행하는 워크플로우입니다.",
+  "description": "GitHub PR URL, 리뷰 처리, CI 디버깅, PR 생성 작업을 로컬 git, gh, GitHub GraphQL, connector fallback 기준으로 수행하는 워크플로우입니다.",
   "author": {
     "name": "seongho",
     "url": "https://github.com/seongho"
@@ -22,8 +22,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Seongho GitHub",
-    "shortDescription": "gh와 로컬 git 기반 PR 리뷰, CI, 게시 워크플로우",
-    "longDescription": "GitHub PR URL 기반 요청을 재현 가능한 로컬 git, gh, GraphQL 명령으로 처리합니다. PR 리뷰와 Copilot feedback 처리, thread reply/resolve, GitHub Actions 디버깅, 로컬 변경사항 commit/push/draft PR 생성을 수행합니다.",
+    "shortDescription": "gh, 로컬 git, connector fallback 기반 PR 리뷰, CI, 게시 워크플로우",
+    "longDescription": "GitHub PR URL 기반 요청을 재현 가능한 로컬 git, gh, GraphQL 명령으로 처리합니다. gh REST rate limit 때는 Codex GitHub connector fallback을 사용합니다. PR 리뷰와 Copilot feedback 처리, thread reply/resolve, GitHub Actions 디버깅, 로컬 변경사항 commit/push/draft PR 생성을 수행합니다.",
     "developerName": "seongho",
     "category": "Coding",
     "capabilities": [

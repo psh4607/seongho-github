@@ -13,6 +13,7 @@ description: "GitHub PR URL의 CI 실패, failing checks, failed checks, GitHub 
 
 - PR metadata, 변경 파일, 현재 branch PR 확인에는 `gh pr view`를 사용합니다.
 - GitHub Actions check와 log 확인에는 `gh pr checks`, `gh run view`, `gh api`를 사용합니다.
+- `gh`가 `API rate limit exceeded`, `X-RateLimit-Remaining: 0`, REST `/user` 403으로 막히면 `gh auth refresh`를 반복하지 않고 Codex GitHub connector로 PR metadata와 comments/read-only 상태를 먼저 확인합니다.
 - 먼저 root cause를 요약하고, 집중된 수정 계획을 제안한 뒤, 명시적인 승인 후 구현합니다.
 
 전제 조건: GitHub CLI로 한 번 인증한 뒤 `gh auth status`로 확인합니다. Actions 확인에는 보통 repo와 workflow scope가 필요합니다.
@@ -33,6 +34,7 @@ description: "GitHub PR URL의 CI 실패, failing checks, failed checks, GitHub 
 1. `gh` 인증을 확인합니다.
    - repo 안에서 `gh auth status`를 실행합니다.
    - 인증되어 있지 않으면 repo와 workflow scope를 포함해 `gh auth login`을 실행하도록 요청합니다.
+   - 단, 실패 원인이 REST rate limit이면 재인증을 요청하지 않습니다. connector로 가능한 PR metadata를 확인하고, Actions log처럼 connector 도구가 없는 부분은 `gh` reset time과 capability gap을 보고합니다.
 2. PR을 확인합니다.
    - 사용자가 PR 번호나 URL을 제공했다면 그것을 직접 사용합니다.
    - 그렇지 않으면 `gh pr view --json number,url,headRefName,baseRefName`으로 현재 branch PR을 우선 확인합니다.
@@ -63,6 +65,12 @@ description: "GitHub PR URL의 CI 실패, failing checks, failed checks, GitHub 
 8. 상태를 다시 확인하고 남은 risk를 요약합니다.
    - 관련 test와 `gh pr checks` 재실행을 제안합니다.
    - 아직 검증하지 못한 것, flaky 가능성, external failing check 여부를 보고합니다.
+
+## Codex GitHub Connector Fallback
+
+- connector는 PR metadata, comments, reviews 같은 일부 read에는 사용할 수 있습니다.
+- 현재 이 스킬의 핵심인 GitHub Actions run/job log 조회는 명시적인 connector 도구가 있을 때만 connector로 시도합니다.
+- connector 도구가 없으면 `gh auth refresh`를 반복하지 말고 REST rate-limit reset time 이후 재시도를 보고합니다.
 
 ## Bundled Resources
 

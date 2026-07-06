@@ -25,6 +25,24 @@ FETCH_SCRIPT = (
     / "fetch_comments.py"
 )
 
+GITHUB_SKILL = (
+    Path(__file__).resolve().parents[1]
+    / "plugins"
+    / "seongho-github"
+    / "skills"
+    / "github"
+    / "SKILL.md"
+)
+
+ADDRESS_COMMENTS_SKILL = (
+    Path(__file__).resolve().parents[1]
+    / "plugins"
+    / "seongho-github"
+    / "skills"
+    / "gh-address-comments"
+    / "SKILL.md"
+)
+
 
 def load_module():
     spec = importlib.util.spec_from_file_location("review_workflow", SCRIPT)
@@ -228,6 +246,46 @@ class ReviewWorkflowTests(unittest.TestCase):
         self.assertIn("reviews(first: 100, after: $reviewsCursor)", query)
         self.assertIn("comments(first: 100) {", query)
         self.assertGreaterEqual(query.count("url"), 3)
+
+    def test_gh_auth_status_rate_limit_is_detected_without_reauth_loop(self) -> None:
+        message = """
+        github.com
+          X Failed to log in to github.com account psh4607 (keyring)
+          - The token in keyring is invalid.
+        HTTP/2.0 403 Forbidden
+        X-RateLimit-Remaining: 0
+        API rate limit exceeded for user ID 49228032.
+        """
+
+        self.assertTrue(self.workflow.is_github_rest_rate_limited(message))
+        self.assertFalse(self.workflow.is_github_rest_rate_limited("Bad credentials"))
+
+    def test_review_publish_auth_check_allows_rest_rate_limit_fallback(self) -> None:
+        def fake_run(cmd, *, cwd=None, stdin=None):
+            raise RuntimeError("API rate limit exceeded for user ID 49228032")
+
+        self.workflow.run = fake_run
+
+        self.workflow.ensure_gh_authenticated(Path("."))
+
+    def test_fetch_comments_auth_check_allows_rest_rate_limit_fallback(self) -> None:
+        fetch_comments = load_fetch_module()
+
+        def fake_run(cmd, stdin=None):
+            raise RuntimeError("X-RateLimit-Remaining: 0\nAPI rate limit exceeded")
+
+        fetch_comments._run = fake_run
+
+        fetch_comments._ensure_gh_authenticated()
+
+    def test_skills_document_connector_fallback_for_gh_rate_limit(self) -> None:
+        github_skill = GITHUB_SKILL.read_text()
+        address_skill = ADDRESS_COMMENTS_SKILL.read_text()
+
+        for content in (github_skill, address_skill):
+            self.assertIn("Codex GitHub connector", content)
+            self.assertIn("API rate limit exceeded", content)
+            self.assertIn("gh auth refresh", content)
 
 
 if __name__ == "__main__":

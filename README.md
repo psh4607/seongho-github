@@ -1,13 +1,14 @@
 # Seongho GitHub
 
-로컬 `git`, GitHub CLI `gh`, GitHub GraphQL을 기준으로 동작하는 개인 GitHub 워크플로우 스킬 모음입니다. GitHub PR URL 기반 리뷰 처리, Copilot review 대응, CI 디버깅, PR 생성 작업을 명확히 소유하도록 구성했습니다.
+로컬 `git`, GitHub CLI `gh`, GitHub GraphQL, Codex GitHub connector fallback을 기준으로 동작하는 개인 GitHub 워크플로우 스킬 모음입니다. GitHub PR URL 기반 리뷰 처리, Copilot review 대응, CI 디버깅, PR 생성 작업을 명확히 소유하도록 구성했습니다.
 
 ## 정책
 
 - 브랜치, diff, 커밋, push 작업은 로컬 checkout을 기준으로 판단합니다.
 - GitHub 인증, PR 탐색, PR 생성, 리뷰 코멘트, Actions 확인은 `gh`를 사용합니다.
 - 리뷰 스레드 상태, inline 위치, 페이지네이션, resolve 상태처럼 일반 `gh` 출력만으로 부족한 정보는 `gh api graphql`로 가져옵니다.
-- 사용자가 명시적으로 요청하지 않는 한 다른 플러그인의 GitHub app 도구를 사용하지 않습니다.
+- `gh`가 `API rate limit exceeded`, `X-RateLimit-Remaining: 0`, REST `/user` 403으로 막히면 `gh auth refresh`를 반복하지 않고 Codex GitHub connector로 가능한 PR/issue/review/comment/thread 작업을 진행합니다.
+- Codex GitHub connector에 명시 도구가 없는 GitHub Actions job log 조회나 PR 생성은 `gh` reset time과 capability gap을 보고합니다.
 - 생성하는 브랜치명과 PR 제목은 중립적으로 작성합니다. 특정 도구 이름을 prefix로 붙이지 않습니다.
 
 ## 스킬

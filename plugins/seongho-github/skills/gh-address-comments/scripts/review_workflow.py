@@ -65,6 +65,23 @@ def write_json(path: str, payload: dict[str, Any]) -> None:
     Path(path).write_text(data)
 
 
+def is_github_rest_rate_limited(message: str) -> bool:
+    text = message.lower()
+    return (
+        "api rate limit exceeded" in text
+        or "x-ratelimit-remaining: 0" in text
+        or "x-ratelimit-remaining:0" in text
+    )
+
+
+def gh_rate_limit_guidance() -> str:
+    return (
+        "GitHub REST rate limit detected. Do not repeat `gh auth refresh`; "
+        "use the Codex GitHub connector for supported PR/comment/thread operations "
+        "or retry `gh` after the reset time."
+    )
+
+
 def author_login(node: dict[str, Any]) -> str:
     author = node.get("author") or {}
     login = author.get("login")
@@ -368,6 +385,8 @@ def run(cmd: list[str], *, cwd: Path | None = None, stdin: str | None = None) ->
     process = subprocess.run(cmd, input=stdin, capture_output=True, cwd=cwd, text=True)
     if process.returncode != 0:
         message = (process.stderr or process.stdout or "").strip()
+        if is_github_rest_rate_limited(message):
+            message = f"{message}\n{gh_rate_limit_guidance()}"
         raise RuntimeError(message or f"Command failed: {' '.join(cmd)}")
     return process.stdout
 
@@ -384,6 +403,9 @@ def ensure_gh_authenticated(repo: Path) -> None:
     try:
         run(["gh", "auth", "status"], cwd=repo)
     except RuntimeError as exc:
+        if is_github_rest_rate_limited(str(exc)):
+            print(f"Warning: {gh_rate_limit_guidance()}", file=sys.stderr)
+            return
         raise RuntimeError("gh 인증이 필요합니다. `gh auth login` 후 다시 실행하세요.") from exc
 
 

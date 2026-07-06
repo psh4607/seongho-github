@@ -52,6 +52,8 @@ def run(cmd: list[str]) -> str:
     process = subprocess.run(cmd, capture_output=True, text=True)
     if process.returncode != 0:
         message = (process.stderr or process.stdout or "").strip()
+        if is_github_rest_rate_limited(message):
+            message = f"{message}\n{gh_rate_limit_guidance()}"
         raise RuntimeError(message or f"명령이 실패했습니다: {' '.join(cmd)}")
     return process.stdout
 
@@ -64,10 +66,30 @@ def run_json(cmd: list[str]) -> dict[str, Any]:
         raise RuntimeError(f"JSON을 parse할 수 없습니다: {exc}\nRaw:\n{output}") from exc
 
 
+def is_github_rest_rate_limited(message: str) -> bool:
+    text = message.lower()
+    return (
+        "api rate limit exceeded" in text
+        or "x-ratelimit-remaining: 0" in text
+        or "x-ratelimit-remaining:0" in text
+    )
+
+
+def gh_rate_limit_guidance() -> str:
+    return (
+        "GitHub REST rate limit detected. Do not repeat `gh auth refresh`; "
+        "use the Codex GitHub connector for supported PR/comment/thread operations "
+        "or retry `gh` after the reset time."
+    )
+
+
 def ensure_gh_authenticated() -> None:
     try:
         run(["gh", "auth", "status"])
     except RuntimeError as exc:
+        if is_github_rest_rate_limited(str(exc)):
+            print(f"Warning: {gh_rate_limit_guidance()}", file=sys.stderr)
+            return
         raise RuntimeError("gh 인증이 필요합니다. `gh auth login` 후 다시 실행하세요.") from exc
 
 
