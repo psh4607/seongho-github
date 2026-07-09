@@ -10,6 +10,7 @@
 - `gh`가 `API rate limit exceeded`, `X-RateLimit-Remaining: 0`, REST `/user` 403으로 막히면 `gh auth refresh`를 반복하지 않고 Codex GitHub connector로 가능한 PR/issue/review/comment/thread 작업을 진행합니다.
 - Codex GitHub connector에 명시 도구가 없는 GitHub Actions job log 조회나 PR 생성은 `gh` reset time과 capability gap을 보고합니다.
 - 생성하는 브랜치명과 PR 제목은 중립적으로 작성합니다. 특정 도구 이름을 prefix로 붙이지 않습니다.
+- FE 변경 PR의 스크린샷 첨부 정책은 [PR Screenshot Attachments](docs/pr-screenshot-attachments.md)를 따릅니다.
 
 ## 스킬
 
