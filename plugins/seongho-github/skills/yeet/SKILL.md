@@ -110,6 +110,8 @@ ticket URL을 신뢰성 있게 만들 수 없을 때만 `--allow-unlinked-ticket
 
 ## PR Body 기준
 
+FE 변경사항을 포함한 PR이면 `../../docs/pr-screenshot-attachments.md`를 읽고, 스크린샷 첨부와 처음 읽는 사람 중심의 PR body 정책을 best-effort로 적용합니다. 스크린샷 자동 첨부 실패는 PR 생성을 막지 않고, 실패 단계만 PR body에 남깁니다.
+
 먼저 repository의 PR template을 찾습니다.
 
 - `.github/pull_request_template.md`
