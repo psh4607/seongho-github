@@ -110,7 +110,7 @@ ticket URL을 신뢰성 있게 만들 수 없을 때만 `--allow-unlinked-ticket
 
 ## PR Body 기준
 
-FE 변경사항을 포함한 PR이면 `../../docs/pr-screenshot-attachments.md`를 읽고, 스크린샷 첨부와 처음 읽는 사람 중심의 PR body 정책을 best-effort로 적용합니다. 스크린샷 자동 첨부 실패는 PR 생성을 막지 않고, 실패 단계만 PR body에 남깁니다.
+FE 변경사항을 포함한 PR이면 `../../docs/pr-screenshot-attachments.md`를 읽고, 처음 읽는 사람 중심의 PR body 정책을 적용합니다. 스크린샷은 20-30초 fast path만 기본 시도하고, 실패하거나 실제 인증 화면 QA가 필요하면 PR 생성을 막지 않고 follow-up comment로 분리합니다. Dia CDP와 Computer Use fallback은 사용자가 스크린샷/실제 화면 확인을 강하게 요구할 때만 사용합니다.
 
 먼저 repository의 PR template을 찾습니다.
 
