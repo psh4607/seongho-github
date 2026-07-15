@@ -1,6 +1,6 @@
 {
   "name": "seongho-github",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "GitHub PR URL, 리뷰 처리, CI 디버깅, PR 생성 작업을 로컬 git, gh, GitHub GraphQL, connector fallback 기준으로 수행하는 워크플로우입니다.",
   "author": {
     "name": "seongho",
@@ -31,7 +31,9 @@
       "Write"
     ],
     "websiteURL": "https://github.com/psh4607/seongho-github",
-    "brandColor": "#24292F",
+    "brandColor": "#FF5B69",
+    "composerIcon": "./assets/plugin-icon.svg",
+    "logo": "./assets/plugin-icon.svg",
     "defaultPrompt": [
       "현재 GitHub PR을 확인해줘.",
       "코파일럿 PR 리뷰를 확인하고 처리해줘.",
