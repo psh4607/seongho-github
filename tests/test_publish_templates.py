@@ -18,6 +18,12 @@ class TemplateTests(unittest.TestCase):
         markdown = '## Summary\n<!--\n## Performance\n-->\n```md\n## Example\n```\n~~~\n## Another example\n~~~\n## Testing\n'
         self.assertEqual(guard.markdown_headings(markdown), ['Summary', 'Testing'])
 
+    def test_inline_backtick_run_does_not_hide_following_heading(self):
+        self.assertEqual(guard.markdown_headings('## Summary\n```npm test``` passed\n## Testing'), ['Summary', 'Testing'])
+
+    def test_comment_marker_inside_fence_does_not_hide_following_heading(self):
+        self.assertEqual(guard.markdown_headings('## Summary\n```html\n<!--\n```\n## Testing'), ['Summary', 'Testing'])
+
     def test_hidden_body_heading_cannot_satisfy_requirement(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'template.md'

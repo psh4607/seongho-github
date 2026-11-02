@@ -24,6 +24,14 @@ class PublishNamingPolicyTests(unittest.TestCase):
         result = self.run_guard('exp', {'source': 'AGENTS.md:34; promotion PR #9', 'branch_pattern': 'exp'})
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_custom_ticket_branch_still_requires_link(self):
+        policy = {'source': 'CONTRIBUTING.md:12', 'branch_pattern': 'feature/PROJ-[0-9]+/add-button'}
+        result = self.run_guard('feature/PROJ-123/add-button', policy)
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn('PROJ-123', result.stderr)
+        result = self.run_guard('feature/PROJ-123/add-button', policy, body=BODY + '\n[PROJ-123](https://example.com/PROJ-123)')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_default_policy_still_rejects_unrecognised_head(self):
         self.assertNotEqual(self.run_guard('exp').returncode, 0)
 

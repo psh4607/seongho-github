@@ -110,21 +110,40 @@ def normalize_heading(value: str) -> str:
 
 def markdown_headings(markdown: str) -> list[str]:
     headings: list[str] = []
-    markdown = re.sub(r"<!--.*?(?:-->|$)", "", markdown, flags=re.DOTALL)
     fence_char = ""
     fence_size = 0
+    in_comment = False
     for line in markdown.splitlines():
-        fence = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
-        if fence:
-            marker, suffix = fence.groups()
-            if not fence_char:
-                fence_char, fence_size = marker[0], len(marker)
-            elif marker[0] == fence_char and len(marker) >= fence_size and not suffix.strip():
+        if fence_char:
+            closing = re.match(r"^ {0,3}(`{3,}|~{3,})[ \t]*$", line)
+            if closing and closing.group(1)[0] == fence_char and len(closing.group(1)) >= fence_size:
                 fence_char = ""
             continue
-        if fence_char:
-            continue
-        match = re.match(r"^\s{0,3}#{1,6}\s+(.+?)\s*$", line)
+
+        # Recognize fences before comments: literal HTML inside code is not markup.
+        if not in_comment:
+            fence = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+            if fence and not (fence.group(1)[0] == "`" and "`" in fence.group(2)):
+                fence_char, fence_size = fence.group(1)[0], len(fence.group(1))
+                continue
+
+        visible = ""
+        while line:
+            if in_comment:
+                end = line.find("-->")
+                if end < 0:
+                    break
+                line = line[end + 3:]
+                in_comment = False
+            else:
+                start = line.find("<!--")
+                if start < 0:
+                    visible += line
+                    break
+                visible += line[:start]
+                line = line[start + 4:]
+                in_comment = True
+        match = re.match(r"^\s{0,3}#{1,6}\s+(.+?)\s*$", visible)
         if match:
             headings.append(normalize_heading(match.group(1)))
     return headings
@@ -140,9 +159,10 @@ def template_required_headings(template: str) -> list[str]:
 
 def branch_ticket(branch: str) -> str | None:
     match = BRANCH_RE.match(branch)
-    if not match:
-        return None
-    return match.group("ticket")
+    if match and match.group("ticket"):
+        return match.group("ticket")
+    ticket = re.search(r"(?<![A-Za-z0-9])[A-Z][A-Z0-9]+-\d+(?![A-Za-z0-9])", branch)
+    return ticket.group(0) if ticket else None
 
 
 def validate_branch(branch: str, errors: list[str]) -> None:
