@@ -10,6 +10,7 @@ PR publish 직전에 branch name, commit message, PR body 규칙을 검사합니
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -109,8 +110,40 @@ def normalize_heading(value: str) -> str:
 
 def markdown_headings(markdown: str) -> list[str]:
     headings: list[str] = []
+    fence_char = ""
+    fence_size = 0
+    in_comment = False
     for line in markdown.splitlines():
-        match = re.match(r"^\s{0,3}#{1,6}\s+(.+?)\s*$", line)
+        if fence_char:
+            closing = re.match(r"^ {0,3}(`{3,}|~{3,})[ \t]*$", line)
+            if closing and closing.group(1)[0] == fence_char and len(closing.group(1)) >= fence_size:
+                fence_char = ""
+            continue
+
+        # Recognize fences before comments: literal HTML inside code is not markup.
+        if not in_comment:
+            fence = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+            if fence and not (fence.group(1)[0] == "`" and "`" in fence.group(2)):
+                fence_char, fence_size = fence.group(1)[0], len(fence.group(1))
+                continue
+
+        visible = ""
+        while line:
+            if in_comment:
+                end = line.find("-->")
+                if end < 0:
+                    break
+                line = line[end + 3:]
+                in_comment = False
+            else:
+                start = line.find("<!--")
+                if start < 0:
+                    visible += line
+                    break
+                visible += line[:start]
+                line = line[start + 4:]
+                in_comment = True
+        match = re.match(r"^\s{0,3}#{1,6}\s+(.+?)\s*$", visible)
         if match:
             headings.append(normalize_heading(match.group(1)))
     return headings
@@ -126,9 +159,9 @@ def template_required_headings(template: str) -> list[str]:
 
 def branch_ticket(branch: str) -> str | None:
     match = BRANCH_RE.match(branch)
-    if not match:
-        return None
-    return match.group("ticket")
+    if match and match.group("ticket"):
+        return match.group("ticket")
+    return None
 
 
 def validate_branch(branch: str, errors: list[str]) -> None:
@@ -165,6 +198,44 @@ def validate_commit_message(message: str | None, errors: list[str]) -> None:
     )
 
 
+def validate_naming_policy(
+    policy_path: str, branch: str, message: str | None, errors: list[str]
+) -> str | None:
+    policy = json.loads(Path(policy_path).read_text())
+    allowed_keys = {"source", "branch_pattern", "commit_pattern"}
+    if not isinstance(policy, dict) or set(policy) - allowed_keys:
+        raise ValueError("naming policy must be an object with source/branch_pattern/commit_pattern")
+    source = policy.get("source")
+    if not isinstance(source, str) or not source.strip():
+        raise ValueError("naming policy requires a source describing repository evidence")
+    patterns = {key: policy[key] for key in ("branch_pattern", "commit_pattern") if key in policy}
+    if not patterns or any(not isinstance(value, str) or not value.strip() for value in patterns.values()):
+        raise ValueError("naming policy requires non-empty branch_pattern or commit_pattern")
+
+    if "branch_pattern" in patterns:
+        # Repository conventions may vary; Git ref syntax still applies.
+        valid_ref = subprocess.run(
+            ["git", "check-ref-format", "refs/heads/" + branch], capture_output=True
+        ).returncode == 0
+        if not branch or not valid_ref or not re.fullmatch(patterns["branch_pattern"], branch):
+            errors.append("branch does not match the repository naming policy or Git ref syntax.")
+    else:
+        validate_branch(branch, errors)
+
+    if "commit_pattern" in patterns:
+        pattern = re.compile(patterns["commit_pattern"])
+        if message is not None and (not message.strip() or not pattern.fullmatch(message.strip())):
+            errors.append("commit message does not match the repository naming policy.")
+    else:
+        validate_commit_message(message, errors)
+
+    if "branch_pattern" in patterns:
+        match = re.fullmatch(patterns["branch_pattern"], branch)
+        if match and "ticket" in match.re.groupindex:
+            return match.group("ticket") or branch_ticket(branch)
+    return branch_ticket(branch)
+
+
 def validate_title(title: str | None, errors: list[str]) -> None:
     if title is None:
         return
@@ -185,6 +256,7 @@ def validate_body_against_template(
     body: str,
     templates: list[Path],
     errors: list[str],
+    optional_headings: dict[str, str] | None = None,
 ) -> None:
     body_headings = markdown_headings(body)
 
@@ -197,13 +269,25 @@ def validate_body_against_template(
 
         template = templates[0]
         required = template_required_headings(template.read_text())
-        missing = [heading for heading in required if heading not in body_headings]
+        optional = optional_headings or {}
+        if not isinstance(optional, dict):
+            raise ValueError("optional_headings must map exact headings to omission reasons")
+        for heading, reason in optional.items():
+            if heading not in required or not isinstance(reason, str) or not reason.strip():
+                raise ValueError("optional heading must exist in the template and have an omission reason")
+            if re.search(r"필수|\brequired\b|mandatory", heading, re.IGNORECASE):
+                raise ValueError("explicitly required headings cannot be omitted")
+        if required and all(heading in optional for heading in required):
+            raise ValueError("template policy cannot omit every heading")
+        missing = [heading for heading in required if heading not in body_headings and heading not in optional]
         if missing:
             errors.append(
                 f"PR body does not follow template {template}: missing headings {missing}."
             )
         return
 
+    if optional_headings:
+        raise ValueError("optional headings require an explicit repository template")
     missing = [section for section in DEFAULT_REQUIRED_SECTIONS if section not in body_headings]
     if missing:
         errors.append(
@@ -244,8 +328,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-h", "--help", action="help", help="도움말을 출력하고 종료합니다.")
     parser.add_argument("--repo", default=".", help="대상 Git repository path.")
     parser.add_argument("--branch", help="검사할 branch name. 생략하면 현재 branch를 사용합니다.")
+    parser.add_argument("--naming-policy-file", help="Repository naming policy JSON with source and branch_pattern/commit_pattern.")
     parser.add_argument("--title", help="검사할 PR title.")
     parser.add_argument("--commit-message", help="검사할 commit message.")
+    parser.add_argument("--template-policy-file", help="JSON source and optional_headings with per-section reasons; requires --template.")
     parser.add_argument("--template", help="사용할 PR template path. 여러 template이 있을 때 필수입니다.")
     parser.add_argument(
         "--allow-unlinked-ticket",
@@ -268,14 +354,30 @@ def main() -> int:
         body = read_body(args)
         templates = [Path(args.template).resolve()] if args.template else find_templates(repo)
 
-        validate_branch(branch, errors)
+        ticket = branch_ticket(branch)
+        if args.naming_policy_file:
+            ticket = validate_naming_policy(args.naming_policy_file, branch, args.commit_message, errors)
+        else:
+            validate_branch(branch, errors)
+            validate_commit_message(args.commit_message, errors)
         validate_title(args.title, errors)
-        validate_commit_message(args.commit_message, errors)
-        validate_body_against_template(body, templates, errors)
+        optional_headings = None
+        if args.template_policy_file:
+            if not args.template:
+                raise ValueError("--template-policy-file requires --template")
+            policy = json.loads(Path(args.template_policy_file).read_text())
+            if not isinstance(policy, dict) or set(policy) != {"source", "optional_headings"}:
+                raise ValueError("template policy requires source and optional_headings only")
+            if not isinstance(policy["source"], str) or not policy["source"].strip():
+                raise ValueError("template policy requires repository evidence in source")
+            optional_headings = policy["optional_headings"]
+            if not isinstance(optional_headings, dict):
+                raise ValueError("optional_headings must be an object")
+        validate_body_against_template(body, templates, errors, optional_headings)
         validate_placeholders(body, errors)
         validate_ticket_link(
             body=body,
-            ticket=branch_ticket(branch),
+            ticket=ticket,
             allow_unlinked_ticket=args.allow_unlinked_ticket,
             errors=errors,
         )

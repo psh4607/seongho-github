@@ -29,7 +29,7 @@ description: GitHub URL, GitHub PR URL, issue URL, repository URL이 포함된 �
 - PR patch 확인
 - top-level PR comment, label, reaction 확인
 - issue 조회와 요약
-- 요청 범위가 충분히 좁고 publish workflow가 필요 없을 때의 PR 생성
+- PR 생성은 크기나 commit/push 필요 여부와 관계없이 `../yeet/SKILL.md`로 라우팅합니다. base/head와 repository flow 검증을 생략하는 별도 생성 경로는 두지 않습니다.
 
 사용자 요청이나 로컬 git 맥락만으로 저장소를 식별할 수 없다면 추측하지 말고 repo 식별자를 요청합니다.
 
