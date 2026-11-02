@@ -109,6 +109,8 @@ python "<path-to-skill>/scripts/validate_publish_ready.py" \
 {"source": "AGENTS.md:34; 기존 승격 PR #9", "branch_pattern": "exp"}
 ```
 
+사용자 지정 branch 형식에 ticket이 포함되면 `branch_pattern`에 `(?P<ticket>PROJ-[0-9]+)`처럼 실제 ticket 부분을 이름 있는 그룹으로 지정합니다. 기본 형식의 ticket 검사는 유지하며, 사용자 지정 이름의 `ISO-8601` 같은 문자열을 ticket으로 추측하지 않습니다.
+
 이 파일은 확인한 정책을 전달하는 수단이며 정책의 진위를 자동 검증하지 않습니다. 통과시키려고 `.*`를 넣거나 근거를 만들어내지 않습니다. title/body/template/ticket 검사는 계속 적용되며 Git hook을 변경하거나 우회하지 않습니다. 승격 PR에 새 commit이 없다면 `--commit-message`는 생략할 수 있습니다.
 
 ticket URL을 신뢰성 있게 만들 수 없을 때만 `--allow-unlinked-ticket`을 사용합니다. 이 경우 최종 요약에 ticket link를 만들지 못한 이유를 적습니다.

@@ -161,8 +161,7 @@ def branch_ticket(branch: str) -> str | None:
     match = BRANCH_RE.match(branch)
     if match and match.group("ticket"):
         return match.group("ticket")
-    ticket = re.search(r"(?<![A-Za-z0-9])[A-Z][A-Z0-9]+-\d+(?![A-Za-z0-9])", branch)
-    return ticket.group(0) if ticket else None
+    return None
 
 
 def validate_branch(branch: str, errors: list[str]) -> None:
@@ -201,7 +200,7 @@ def validate_commit_message(message: str | None, errors: list[str]) -> None:
 
 def validate_naming_policy(
     policy_path: str, branch: str, message: str | None, errors: list[str]
-) -> None:
+) -> str | None:
     policy = json.loads(Path(policy_path).read_text())
     allowed_keys = {"source", "branch_pattern", "commit_pattern"}
     if not isinstance(policy, dict) or set(policy) - allowed_keys:
@@ -229,6 +228,12 @@ def validate_naming_policy(
             errors.append("commit message does not match the repository naming policy.")
     else:
         validate_commit_message(message, errors)
+
+    if "branch_pattern" in patterns:
+        match = re.fullmatch(patterns["branch_pattern"], branch)
+        if match and "ticket" in match.re.groupindex:
+            return match.group("ticket") or branch_ticket(branch)
+    return branch_ticket(branch)
 
 
 def validate_title(title: str | None, errors: list[str]) -> None:
@@ -349,8 +354,9 @@ def main() -> int:
         body = read_body(args)
         templates = [Path(args.template).resolve()] if args.template else find_templates(repo)
 
+        ticket = branch_ticket(branch)
         if args.naming_policy_file:
-            validate_naming_policy(args.naming_policy_file, branch, args.commit_message, errors)
+            ticket = validate_naming_policy(args.naming_policy_file, branch, args.commit_message, errors)
         else:
             validate_branch(branch, errors)
             validate_commit_message(args.commit_message, errors)
@@ -371,7 +377,7 @@ def main() -> int:
         validate_placeholders(body, errors)
         validate_ticket_link(
             body=body,
-            ticket=branch_ticket(branch),
+            ticket=ticket,
             allow_unlinked_ticket=args.allow_unlinked_ticket,
             errors=errors,
         )
