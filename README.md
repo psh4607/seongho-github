@@ -24,3 +24,21 @@
 이 저장소는 독립적으로 동작하도록 구성했습니다. `.app.json` 통합 manifest를 포함하지 않습니다.
 
 이 저장소는 plugin marketplace root로도 동작합니다. 실제 plugin root는 `plugins/seongho-github`이며, GitHub repo를 marketplace source로 추가하면 이 플러그인을 사용할 수 있습니다.
+
+## Claude Code 설치
+
+Codex 플러그인(`plugins/seongho-github`)이 원본입니다. Claude Code 플러그인(`claude/seongho-github`)은 매니페스트만 따로 두고, `skills/<skill>`과 `docs`는 원본을 가리키는 상대 경로 심링크로 연결합니다. Claude Code가 설치할 때 링크 대상을 플러그인 캐시로 복사하므로 스킬 본문은 원본 한 곳에서만 관리합니다.
+
+Claude Code 세션에서 마켓플레이스를 추가한 뒤 플러그인을 설치합니다.
+
+```text
+/plugin marketplace add psh4607/seongho-github
+/plugin install seongho-github@seongho-github
+```
+
+셸에서는 `claude plugin marketplace add psh4607/seongho-github`와 `claude plugin install seongho-github@seongho-github`를 실행합니다. 설치한 스킬은 `seongho-github:github`, `seongho-github:yeet`처럼 `<plugin>:<skill>` 이름으로 노출됩니다.
+
+- 심링크를 지원하는 git checkout이 필요합니다. macOS와 Linux는 기본으로 지원합니다. Windows에서는 Developer Mode를 켜고 `git config --global core.symlinks true`를 설정한 뒤 마켓플레이스를 추가합니다. 심링크가 텍스트 파일로 checkout되면 설치는 성공한다고 나오지만 스킬이 하나도 로드되지 않습니다. 설치 후 `claude plugin details seongho-github@seongho-github`에서 `Skills (4)`가 보이는지 확인합니다.
+- 4개 스킬을 모두 링크합니다. 스킬 본문의 Codex GitHub connector fallback은 `gh` REST rate limit 때만 쓰는 보조 경로이며, Codex GitHub connector가 없는 Claude Code에서는 스킬 지침대로 reset time과 capability gap을 보고합니다.
+- Codex 매니페스트의 `version`이나 메타데이터를 바꾸면 `claude/seongho-github/.claude-plugin/plugin.json`도 같은 값으로 바꿉니다. Claude Code는 `version`이 바뀌어야 설치본을 갱신합니다. `tests/test_claude_plugin.py`가 두 매니페스트와 심링크가 어긋나지 않는지 검사합니다.
+- 매니페스트는 `claude plugin validate .`와 `claude plugin validate ./claude/seongho-github`로 검증합니다. 심링크된 스킬은 validator가 따라가지 않는다는 경고가 나오며, 설치본에서는 정상으로 로드됩니다.

@@ -1,0 +1,23 @@
+{
+  "name": "seongho-github",
+  "displayName": "Seongho GitHub",
+  "version": "0.1.2",
+  "description": "GitHub PR URL, 리뷰 처리, CI 디버깅, PR 생성 작업을 로컬 git, gh, GitHub GraphQL, connector fallback 기준으로 수행하는 워크플로우입니다.",
+  "author": {
+    "name": "seongho",
+    "url": "https://github.com/seongho"
+  },
+  "homepage": "https://github.com/psh4607/seongho-github",
+  "repository": "https://github.com/psh4607/seongho-github",
+  "license": "Apache-2.0",
+  "keywords": [
+    "github",
+    "gh",
+    "pull-request",
+    "code-review",
+    "copilot-review",
+    "pr-review",
+    "ci",
+    "actions"
+  ]
+}

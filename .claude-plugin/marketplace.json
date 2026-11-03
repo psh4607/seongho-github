@@ -1,0 +1,15 @@
+{
+  "name": "seongho-github",
+  "owner": {
+    "name": "seongho",
+    "url": "https://github.com/seongho"
+  },
+  "description": "Codex 플러그인 스킬을 링크로 재사용하는 Seongho GitHub Claude Code 마켓플레이스입니다.",
+  "plugins": [
+    {
+      "name": "seongho-github",
+      "source": "./claude/seongho-github",
+      "category": "Coding"
+    }
+  ]
+}
